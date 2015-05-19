@@ -908,11 +908,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface {
 			String flagName = it.next();
 			String value = flags.getString(flagName);
 			value = applyAllReplacements(value);
-			// In the config normal Bukkit color codes are used, those only need to be translated on 5.X
-			// WorldGuard versions
-			if (plugin.getWorldGuard().getDescription().getVersion().startsWith("5.")) {
-				value = translateBukkitToWorldGuardColors(value);
-			}
+
 			if (flagName.equalsIgnoreCase("members")) {
 				plugin.getWorldGuardHandler().setMembers(region, value);
 				// AreaShop.debug("  Flag " + flagName + " set: " + members.toUserFriendlyString());
@@ -1021,35 +1017,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface {
 		plugin.getFileManager().saveIsRequiredForRegionWorld(getWorldName());
 		return result;
 	}
-	
-	/** Translate the color codes you put in greeting/farwell messages to the weird color codes of
-	 * WorldGuard
-	 * 
-	 * @param message The message where the color codes should be translated (this message has bukkit
-	 *        color codes)
-	 * @return The string with the WorldGuard color codes */
-	public String translateBukkitToWorldGuardColors(String message) {
-		String result = message;
-		result = result.replace("&c", "&r");
-		result = result.replace("&4", "&R");
-		result = result.replace("&e", "&y");
-		result = result.replace("&6", "&Y");
-		result = result.replace("&a", "&g");
-		result = result.replace("&2", "&G");
-		result = result.replace("&b", "&c");
-		result = result.replace("&3", "&C");
-		result = result.replace("&9", "&b");
-		result = result.replace("&1", "&B");
-		result = result.replace("&d", "&p");
-		result = result.replace("&5", "&P");
-		result = result.replace("&0", "&0");
-		result = result.replace("&8", "&1");
-		result = result.replace("&7", "&2");
-		result = result.replace("&f", "&w");
-		result = result.replace("&r", "&x");
-		return result;
-	}
-	
+		
 	/** Indicate this region needs to be saved, saving will happen by a repeating task */
 	public void saveRequired() {
 		saveRequired = true;
