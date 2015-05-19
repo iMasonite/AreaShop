@@ -25,12 +25,6 @@ signTags:
 ## This means it would also block 'house_123' and 'house_000456'. It will not block 'ahouse_1' or 'house_'.
 blacklist:
   - '__global__'
-## Enable sending stats to http://mcstats.org/ (Metrics plugin).
-## This information will give me an indication about how much the plugin is used and encourages me to continue development.
-sendStats: true
-## If enabled it will check for updates when loading the plugin, it will never download files, it will only notify about it
-## A message will be printed in the console when an update is available and OPs will be notified when joining the server
-checkForUpdates: true
 ## Use colors when sending messages to console and log files
 useColorsInConsole: false
 ## Post error messages in the console when a command run from the config fails (from the 'runCommands' section for example)
