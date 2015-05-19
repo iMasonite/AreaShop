@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class SetownerCommand extends CommandAreaShop {
-
+	
 	public SetownerCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -26,73 +27,75 @@ public class SetownerCommand extends CommandAreaShop {
 	public String getCommandStart() {
 		return "areashop setowner";
 	}
-
+	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.setownerrent") || target.hasPermission("areashop.setownerbuy")) {
-			return plugin.getLanguageManager().getLang("help-setowner");
-		}
+		if (target.hasPermission("areashop.setownerrent") || target.hasPermission("areashop.setownerbuy")) return plugin.getLanguageManager().getLang("help-setowner");
 		return null;
 	}
 	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
-		if(!sender.hasPermission("areashop.setownerrent") && !sender.hasPermission("areashop.setownerbuy")) {
+		if (!sender.hasPermission("areashop.setownerrent") && !sender.hasPermission("areashop.setownerbuy")) {
 			plugin.message(sender, "setowner-noPermission");
 			return;
 		}
 		GeneralRegion region;
-		if(args.length < 2) {
+		if (args.length < 2) {
 			plugin.message(sender, "setowner-help");
 			return;
-		}		
-		if(args.length == 2) {
+		}
+		if (args.length == 2) {
 			if (sender instanceof Player) {
 				// get the region by location
 				List<GeneralRegion> regions = Utils.getAllApplicableRegions(((Player) sender).getLocation());
 				if (regions.isEmpty()) {
 					plugin.message(sender, "cmd-noRegionsAtLocation");
 					return;
-				} else if (regions.size() > 1) {
+				}
+				else if (regions.size() > 1) {
 					plugin.message(sender, "cmd-moreRegionsAtLocation");
 					return;
-				} else {
+				}
+				else {
 					region = regions.get(0);
 				}
-			} else {
+			}
+			else {
 				plugin.message(sender, "cmd-automaticRegionOnlyByPlayer");
 				return;
 			}
-		} else {
+		}
+		else {
 			region = plugin.getFileManager().getRegion(args[2]);
 		}
-		if(region == null) {
+		if (region == null) {
 			plugin.message(sender, "setowner-notRegistered");
 			return;
 		}
 		
-		if(region.isRentRegion() && !sender.hasPermission("areashop.setownerrent")) {
+		if (region.isRentRegion() && !sender.hasPermission("areashop.setownerrent")) {
 			plugin.message(sender, "setowner-noPermissionRent");
 			return;
 		}
-		if(region.isBuyRegion() && !sender.hasPermission("areashop.setownerbuy")) {
+		if (region.isBuyRegion() && !sender.hasPermission("areashop.setownerbuy")) {
 			plugin.message(sender, "setowner-noPermissionBuy");
 			return;
 		}
 		
 		String playerName = null;
 		OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
-		if(player != null) {
+		if (player != null) {
 			playerName = player.getName();
 		}
-		if(playerName == null) {
+		if (playerName == null) {
 			plugin.message(sender, "setowner-noPlayer", args[1]);
 			return;
-		}		
+		}
 		
-		if(region.isRentRegion()) {
-			RentRegion rent = (RentRegion)region;
-			if(rent.isRenter(playerName)) {
+		if (region.isRentRegion()) {
+			RentRegion rent = (RentRegion) region;
+			if (rent.isRenter(playerName)) {
 				// extend
 				Calendar calendar = Calendar.getInstance();
 				calendar.setTimeInMillis(rent.getRentedUntil() + rent.getDuration());
@@ -101,11 +104,12 @@ public class SetownerCommand extends CommandAreaShop {
 				plugin.message(sender, "setowner-succesRentExtend", region);
 				rent.updateRegionFlags();
 				rent.updateSigns();
-			} else {
+			}
+			else {
 				// change
 				Calendar calendar = Calendar.getInstance();
 				long current = calendar.getTimeInMillis();
-				if(rent.isRented()) {
+				if (rent.isRented()) {
 					current = rent.getRentedUntil();
 				}
 				calendar.setTimeInMillis(current + rent.getDuration());
@@ -118,33 +122,26 @@ public class SetownerCommand extends CommandAreaShop {
 			rent.updateRegionFlags();
 			rent.updateSigns();
 		}
-		if(region.isBuyRegion()) {
-			BuyRegion buy = (BuyRegion)region;
+		if (region.isBuyRegion()) {
+			BuyRegion buy = (BuyRegion) region;
 			buy.setBuyer(playerName);
 			plugin.message(sender, "setowner-succesBuy", region);
 			buy.updateRegionFlags();
 			buy.updateSigns();
-		}		
+		}
 	}
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
 		ArrayList<String> result = new ArrayList<String>();
-		if(toComplete == 2) {
-			for(Player player : Bukkit.getOnlinePlayers()) {
+		if (toComplete == 2) {
+			for (Player player : Bukkit.getOnlinePlayers()) {
 				result.add(player.getName());
 			}
-		} else if(toComplete == 3) {
+		}
+		else if (toComplete == 3) {
 			result.addAll(plugin.getFileManager().getRegionNames());
 		}
 		return result;
 	}
 }
-
-
-
-
-
-
-
-

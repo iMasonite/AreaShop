@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 public class ReloadCommand extends CommandAreaShop {
-
+	
 	public ReloadCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -21,18 +22,17 @@ public class ReloadCommand extends CommandAreaShop {
 	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.reload")) {
-			return plugin.getLanguageManager().getLang("help-reload");
-		}
+		if (target.hasPermission("areashop.reload")) return plugin.getLanguageManager().getLang("help-reload");
 		return null;
 	}
-
+	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
-		if(sender.hasPermission("areashop.reload")) {
+		if (sender.hasPermission("areashop.reload")) {
 			// Reload the configuration files and update all region flags/signs
 			plugin.reload(sender);
-		} else {
+		}
+		else {
 			plugin.message(sender, "reload-noPermission");
 		}
 	}
@@ -42,5 +42,5 @@ public class ReloadCommand extends CommandAreaShop {
 		ArrayList<String> result = new ArrayList<String>();
 		return result;
 	}
-
+	
 }

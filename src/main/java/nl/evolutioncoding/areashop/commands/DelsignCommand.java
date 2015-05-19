@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.BlockIterator;
 
 public class DelsignCommand extends CommandAreaShop {
-
+	
 	public DelsignCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -26,39 +27,37 @@ public class DelsignCommand extends CommandAreaShop {
 	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.delsign")) {
-			return plugin.getLanguageManager().getLang("help-delsign");
-		}
+		if (target.hasPermission("areashop.delsign")) return plugin.getLanguageManager().getLang("help-delsign");
 		return null;
 	}
-
+	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
-		if(!sender.hasPermission("areashop.delsign")) {
+		if (!sender.hasPermission("areashop.delsign")) {
 			plugin.message(sender, "delsign-noPermission");
 			return;
 		}
 		if (!(sender instanceof Player)) {
 			plugin.message(sender, "cmd-onlyByPlayer");
 			return;
-		}			
-		Player player = (Player)sender;
-
+		}
+		Player player = (Player) sender;
+		
 		// Get the sign
 		Block block = null;
 		BlockIterator blockIterator = new BlockIterator(player, 100);
-		while(blockIterator.hasNext() && block == null) {
+		while (blockIterator.hasNext() && block == null) {
 			Block next = blockIterator.next();
-			if(next.getType() != Material.AIR) {
+			if (next.getType() != Material.AIR) {
 				block = next;
 			}
 		}
-		if(block == null || !(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)) {
+		if (block == null || !(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)) {
 			plugin.message(sender, "delsign-noSign");
 			return;
 		}
 		GeneralRegion region = plugin.getFileManager().getRegionBySignLocation(block.getLocation());
-		if(region == null) {
+		if (region == null) {
 			plugin.message(sender, "delsign-noRegion");
 			return;
 		}
@@ -71,15 +70,5 @@ public class DelsignCommand extends CommandAreaShop {
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
 		return new ArrayList<String>();
 	}
-
+	
 }
-
-
-
-
-
-
-
-
-
-

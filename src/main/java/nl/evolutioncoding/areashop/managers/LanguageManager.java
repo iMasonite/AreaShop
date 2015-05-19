@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.managers;
 
 import java.io.File;
@@ -16,34 +17,29 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class LanguageManager {
 	private AreaShop plugin = null;
-	private String languages[] = {"EN"};
+	private String languages[] = { "EN" };
 	private HashMap<String, String> currentLanguage, defaultLanguage;
 	
-	/**
-	 * Constructor
-	 * @param plugin The AreaShop plugin
-	 */
+	/** Constructor
+	 * 
+	 * @param plugin The AreaShop plugin */
 	public LanguageManager(AreaShop plugin) {
 		this.plugin = plugin;
 		startup();
 	}
 	
-	/**
-	 * Save the default language files and open the current and backup language file
-	 */
+	/** Save the default language files and open the current and backup language file */
 	public void startup() {
 		this.saveDefaults();
 		this.loadLanguage();
 	}
 	
-	/**
-	 * Saves the default language files if not already present
-	 */
+	/** Saves the default language files if not already present */
 	public void saveDefaults() {
 		/* Create the language folder if it not exists */
 		File langFolder;
 		langFolder = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder);
-		if(!langFolder.exists()) {
+		if (!langFolder.exists()) {
 			langFolder.mkdirs();
 		}
 		
@@ -52,30 +48,35 @@ public class LanguageManager {
 		/* files would not be used, when translating your own use another */
 		/* file name as the default */
 		File langFile;
-		for(int i=0; i<languages.length; i++) {
-			langFile = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + File.separator + languages[i] + ".yml");
+		for (String language : languages) {
+			langFile = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + File.separator + language + ".yml");
 			InputStream input = null;
 			OutputStream output = null;
 			try {
-				input = plugin.getResource(AreaShop.languageFolder + "/" + languages[i] + ".yml");
-				if(input == null) {
-					plugin.getLogger().warning("Could not save default language to the '" + AreaShop.languageFolder + "' folder: " + languages[i] + ".yml");
+				input = plugin.getResource(AreaShop.languageFolder + "/" + language + ".yml");
+				if (input == null) {
+					plugin.getLogger().warning("Could not save default language to the '" + AreaShop.languageFolder + "' folder: " + language + ".yml");
 					continue;
 				}
 				output = new FileOutputStream(langFile);
-		 
+				
 				int read = 0;
-				byte[] bytes = new byte[1024];		 
+				byte[] bytes = new byte[1024];
 				while ((read = input.read(bytes)) != -1) {
 					output.write(bytes, 0, read);
-				} 
+				}
 				input.close();
 				output.close();
-			} catch(IOException e) {
+			}
+			catch (IOException e) {
 				try {
 					input.close();
 					output.close();
-				} catch (IOException e1) {} catch (NullPointerException e2) {}
+				}
+				catch (IOException e1) {
+				}
+				catch (NullPointerException e2) {
+				}
 				
 				plugin.getLogger().warning("Something went wrong saving a default language file: " + langFile.getPath());
 			}
@@ -83,113 +84,76 @@ public class LanguageManager {
 		
 	}
 	
-	/**
-	 * Loads the current language file specified in the config
-	 */
+	/** Loads the current language file specified in the config */
 	public void loadLanguage() {
 		Map<String, Object> map;
 		Set<String> set;
 		YamlConfiguration ymlFile;
 		
 		/* Save the current language file to the HashMap */
-		currentLanguage = new HashMap<String, String>();		
+		currentLanguage = new HashMap<String, String>();
 		File file = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + File.separator + plugin.getConfig().getString("language") + ".yml");
 		ymlFile = YamlConfiguration.loadConfiguration(file);
 		map = ymlFile.getValues(true);
 		set = map.keySet();
 		try {
-			for(String key : set) {
-				currentLanguage.put(key, (String)map.get(key));
+			for (String key : set) {
+				currentLanguage.put(key, (String) map.get(key));
 			}
-		} catch(ClassCastException e) {}
-		
+		}
+		catch (ClassCastException e) {
+		}
 		
 		/* Save the default strings to the HashMap */
 		defaultLanguage = new HashMap<String, String>();
-		File standard = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + "/" + languages[0]+ ".yml");
-        ymlFile = YamlConfiguration.loadConfiguration(standard);   
-        map = ymlFile.getValues(true);
+		File standard = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + "/" + languages[0] + ".yml");
+		ymlFile = YamlConfiguration.loadConfiguration(standard);
+		map = ymlFile.getValues(true);
 		set = map.keySet();
 		try {
-			for(String key : set) {
-				defaultLanguage.put(key, (String)map.get(key));
+			for (String key : set) {
+				defaultLanguage.put(key, (String) map.get(key));
 			}
-		} catch(ClassCastException e) {}	
+		}
+		catch (ClassCastException e) {
+		}
 	}
 	
-	/**
-	 * Function to get the string in the language that has been set
+	/** Function to get the string in the language that has been set
+	 * 
 	 * @param key Key to the language string
 	 * @param params The replacements for the %1% tags
-	 * @return String The language string specified with the key
-	 */
+	 * @return String The language string specified with the key */
 	public String getLang(String key, Object... params) {
 		String result = null;
 		
 		/* Get the language string */
-		if(currentLanguage.containsKey(key)) {
+		if (currentLanguage.containsKey(key)) {
 			result = currentLanguage.get(key);
-		} else {
+		}
+		else {
 			result = defaultLanguage.get(key);
 		}
 		
-		if(result == null) {
+		if (result == null) {
 			plugin.getLogger().info("Wrong key for getting translation: " + key + ", please contact the author about this");
-		} else {
-			/* Replace all tags like %0% and if given a GeneralRegion apply all replacements */
-			int number=0;
-		    for (int i=0; i<params.length; i++) {
-		    	if(params[i] != null) {
-		    		if(params[i] instanceof GeneralRegion) {
-		    			result = ((GeneralRegion)params[i]).applyAllReplacements(result);
-		    		} else {
-		    			result = result.replace("%" + number + "%", params[i].toString());
-		    			number++;
-		    		}
-		    	}
-		    }
 		}
-	    
+		else {
+			/* Replace all tags like %0% and if given a GeneralRegion apply all replacements */
+			int number = 0;
+			for (Object param : params) {
+				if (param != null) {
+					if (param instanceof GeneralRegion) {
+						result = ((GeneralRegion) param).applyAllReplacements(result);
+					}
+					else {
+						result = result.replace("%" + number + "%", param.toString());
+						number++;
+					}
+				}
+			}
+		}
+		
 		return result;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

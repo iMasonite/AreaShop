@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.managers;
 
 import java.util.HashMap;
@@ -36,39 +37,36 @@ public class SignLinkerManager implements Listener {
 		eventsRegistered = false;
 	}
 	
-	/**
-	 * Let a player enter sign linking mode
+	/** Let a player enter sign linking mode
+	 * 
 	 * @param player The player that has to enter sign linking mode
-	 * @param profile The profile to use for the signs (null for default)
-	 */
+	 * @param profile The profile to use for the signs (null for default) */
 	public void enterSignLinkMode(Player player, String profile) {
 		signLinkers.put(player.getName(), new SignLinker(player, profile));
 		plugin.message(player, "linksigns-first");
 		plugin.message(player, "linksigns-next");
-		if(!eventsRegistered) {
+		if (!eventsRegistered) {
 			eventsRegistered = true;
 			plugin.getServer().getPluginManager().registerEvents(this, plugin);
 		}
 	}
 	
-	/**
-	 * Let a player exit sign linking mode
-	 * @param player The player that has to exit sign linking mode
-	 */
+	/** Let a player exit sign linking mode
+	 * 
+	 * @param player The player that has to exit sign linking mode */
 	public void exitSignLinkMode(Player player) {
 		signLinkers.remove(player.getName());
-		if(eventsRegistered && signLinkers.isEmpty()) {
+		if (eventsRegistered && signLinkers.isEmpty()) {
 			eventsRegistered = false;
 			HandlerList.unregisterAll(this);
 		}
 		plugin.message(player, "linksigns-stopped");
 	}
 	
-	/**
-	 * Check if the player is in sign linking mode
+	/** Check if the player is in sign linking mode
+	 * 
 	 * @param player The player to check
-	 * @return true if the player is in sign linking mode, otherwise false
-	 */
+	 * @return true if the player is in sign linking mode, otherwise false */
 	public boolean isInSignLinkMode(Player player) {
 		return signLinkers.containsKey(player.getName());
 	}
@@ -76,52 +74,54 @@ public class SignLinkerManager implements Listener {
 	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		AreaShop.debug("PlayerInteractEvent of " + event.getPlayer().getName() + ", " + signLinkers.size() + " signlinkers");
-		if(isInSignLinkMode(event.getPlayer())) {
+		if (isInSignLinkMode(event.getPlayer())) {
 			event.setCancelled(true);
 			Player player = event.getPlayer();
 			SignLinker linker = signLinkers.get(event.getPlayer().getName());
-			if(event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
 				// Get the region
 				BlockIterator blockIterator = new BlockIterator(player, 100);
-				while(blockIterator.hasNext()) {
+				while (blockIterator.hasNext()) {
 					Block next = blockIterator.next();
 					List<GeneralRegion> regions = Utils.getASRegionsByLocation(next.getLocation());
-					if(regions.size() == 1) {
+					if (regions.size() == 1) {
 						linker.setRegion(regions.get(0));
 						return;
-					} else if(regions.size() > 1) {
+					}
+					else if (regions.size() > 1) {
 						Set<String> names = new HashSet<String>();
-						for(GeneralRegion region : regions) {
+						for (GeneralRegion region : regions) {
 							names.add(region.getName());
 						}
 						plugin.message(player, "linksigns-multipleRegions", Utils.createCommaSeparatedList(names));
 						plugin.message(player, "linksigns-multipleRegionsAdvice");
 						return;
-					}					
+					}
 				}
 				// No regions found within the maximum range
 				plugin.message(player, "linksigns-noRegions");
-				return;			
-			} else if(event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
+				return;
+			}
+			else if (event.getAction() == Action.LEFT_CLICK_AIR || event.getAction() == Action.LEFT_CLICK_BLOCK) {
 				Block block = null;
 				BlockIterator blockIterator = new BlockIterator(player, 100);
-				while(blockIterator.hasNext() && block == null) {
+				while (blockIterator.hasNext() && block == null) {
 					Block next = blockIterator.next();
-					if(next.getType() != Material.AIR) {
+					if (next.getType() != Material.AIR) {
 						block = next;
 					}
 				}
-				if(block == null || !(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)) {
+				if (block == null || !(block.getType() == Material.WALL_SIGN || block.getType() == Material.SIGN_POST)) {
 					plugin.message(player, "linksigns-noSign");
 					return;
 				}
 				
 				GeneralRegion signRegion = plugin.getFileManager().getRegionBySignLocation(block.getLocation());
-				if(signRegion != null) {
+				if (signRegion != null) {
 					plugin.message(player, "linksigns-alreadyRegistered", signRegion);
 					return;
 				}
-				Sign sign = (Sign)block.getState().getData();
+				Sign sign = (Sign) block.getState().getData();
 				linker.setSign(block.getLocation(), block.getType(), sign.getFacing());
 				return;
 			}
@@ -129,18 +129,14 @@ public class SignLinkerManager implements Listener {
 		}
 	}
 	
-	/**
-	 * Handle disconnection players
-	 */
+	/** Handle disconnection players */
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPlayerLeave(PlayerQuitEvent event) {
 		AreaShop.debug("PlayerQuitEvent of " + event.getPlayer().getName() + ", " + signLinkers.size() + " signlinkers");
 		signLinkers.remove(event.getPlayer().getName());
 	}
 	
-	/**
-	 * Class to keep track of the signlinking data
-	 */
+	/** Class to keep track of the signlinking data */
 	private class SignLinker {
 		private boolean hasSign = false;
 		private boolean hasRegion = false;
@@ -153,7 +149,7 @@ public class SignLinkerManager implements Listener {
 		public Location location = null;
 		public Material type = null;
 		public BlockFace facing = null;
-				
+		
 		public SignLinker(Player linker, String profile) {
 			this.linker = linker;
 			this.profile = profile;
@@ -162,7 +158,7 @@ public class SignLinkerManager implements Listener {
 		public void setRegion(GeneralRegion region) {
 			this.region = region;
 			hasRegion = true;
-			if(!isComplete()) {
+			if (!isComplete()) {
 				plugin.message(linker, "linksigns-regionFound", region);
 			}
 			finalize();
@@ -173,18 +169,20 @@ public class SignLinkerManager implements Listener {
 			this.type = type;
 			this.facing = facing;
 			hasSign = true;
-			if(!isComplete()) {
+			if (!isComplete()) {
 				plugin.message(linker, "linksigns-signFound", location.getBlockX(), location.getBlockY(), location.getBlockZ());
 			}
 			finalize();
 		}
 		
+		@Override
 		public void finalize() {
-			if(isComplete()) {
+			if (isComplete()) {
 				region.addSign(location, type, facing, profile);
-				if(profile == null) {
+				if (profile == null) {
 					plugin.message(linker, "addsign-success", region);
-				} else {
+				}
+				else {
 					plugin.message(linker, "addsign-successProfile", region, profile);
 				}
 				region.updateSigns();
@@ -204,21 +202,4 @@ public class SignLinkerManager implements Listener {
 		}
 	}
 	
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

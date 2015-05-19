@@ -12,16 +12,13 @@
 
 	<repositories>
 		<repository>
-			<id>bukkit-repo</id>
-			<url>http://repo.bukkit.org/content/groups/public</url>
-		</repository>
-		<repository>
 			<id>sk89q-repo-wg</id>
 			<url>http://maven.sk89q.com/artifactory/repo/</url>
 		</repository>
 	</repositories>
 
 	<dependencies>
+
 		<!-- Bukkit -->
 		<dependency>
 			<groupId>org.bukkit</groupId>
@@ -35,14 +32,14 @@
 		<dependency>
 			<groupId>com.sk89q</groupId>
 			<artifactId>worldedit</artifactId>
-			<version>5.5.8</version>
+			<version>5.5.5</version>
 			<scope>provided</scope>
 			<type>jar</type>
 		</dependency>
 		<dependency>
 			<groupId>com.sk89q</groupId>
 			<artifactId>worldguard</artifactId>
-			<version>5.8</version>
+			<version>5.9</version>
 			<scope>provided</scope>
 			<type>jar</type>
 		</dependency>

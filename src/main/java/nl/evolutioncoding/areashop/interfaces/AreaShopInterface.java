@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.interfaces;
 
 import java.util.logging.Logger;
@@ -9,8 +10,12 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
 public interface AreaShopInterface {
 	public void debugI(String message);
+	
 	public YamlConfiguration getConfig();
+	
 	public WorldGuardPlugin getWorldGuard();
+	
 	public WorldEditPlugin getWorldEdit();
+	
 	public Logger getLogger();
 }

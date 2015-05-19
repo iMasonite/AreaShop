@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 public class HelpCommand extends CommandAreaShop {
-
+	
 	public HelpCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -21,12 +22,10 @@ public class HelpCommand extends CommandAreaShop {
 	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.help")) {
-			return plugin.getLanguageManager().getLang("help-help");
-		}
+		if (target.hasPermission("areashop.help")) return plugin.getLanguageManager().getLang("help-help");
 		return null;
 	}
-
+	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
 		plugin.getCommandManager().showHelp(sender);
@@ -37,5 +36,5 @@ public class HelpCommand extends CommandAreaShop {
 		ArrayList<String> result = new ArrayList<String>();
 		return result;
 	}
-
+	
 }

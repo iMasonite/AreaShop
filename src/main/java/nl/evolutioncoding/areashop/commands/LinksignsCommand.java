@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -12,7 +13,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class LinksignsCommand extends CommandAreaShop {
-
+	
 	public LinksignsCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -24,33 +25,32 @@ public class LinksignsCommand extends CommandAreaShop {
 	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.linksigns")) {
-			return plugin.getLanguageManager().getLang("help-linksigns");
-		}
+		if (target.hasPermission("areashop.linksigns")) return plugin.getLanguageManager().getLang("help-linksigns");
 		return null;
 	}
-
+	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
-		if(!sender.hasPermission("areashop.linksigns")) {
+		if (!sender.hasPermission("areashop.linksigns")) {
 			plugin.message(sender, "linksigns-noPermission");
 			return;
-		}		
+		}
 		if (!(sender instanceof Player)) {
 			plugin.message(sender, "cmd-onlyByPlayer");
 			return;
 		}
 		
-		Player player = (Player)sender;
-		if(plugin.getSignlinkerManager().isInSignLinkMode(player)) {
+		Player player = (Player) sender;
+		if (plugin.getSignlinkerManager().isInSignLinkMode(player)) {
 			plugin.getSignlinkerManager().exitSignLinkMode(player);
-		} else {
+		}
+		else {
 			// Get the profile
 			String profile = null;
-			if(args.length > 1) {
+			if (args.length > 1) {
 				profile = args[1];
 				Set<String> profiles = plugin.getConfig().getConfigurationSection("signProfiles").getKeys(false);
-				if(!profiles.contains(profile)) {
+				if (!profiles.contains(profile)) {
 					plugin.message(sender, "addsign-wrongProfile", Utils.createCommaSeparatedList(profiles));
 					return;
 				}
@@ -62,22 +62,13 @@ public class LinksignsCommand extends CommandAreaShop {
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
 		List<String> result = new ArrayList<String>();
-		if(toComplete == 2) {
+		if (toComplete == 2) {
 			result.addAll(plugin.getFileManager().getRegionNames());
-		} else if(toComplete == 3) {
+		}
+		else if (toComplete == 3) {
 			result.addAll(plugin.getConfig().getStringList("signProfiles"));
 		}
 		return result;
 	}
-
+	
 }
-
-
-
-
-
-
-
-
-
-

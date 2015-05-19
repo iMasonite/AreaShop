@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class MeCommand extends CommandAreaShop {
-
+	
 	public MeCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -24,67 +25,68 @@ public class MeCommand extends CommandAreaShop {
 	public String getCommandStart() {
 		return "areashop me";
 	}
-
+	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.me")) {
-			return plugin.getLanguageManager().getLang("help-me");
-		}
+		if (target.hasPermission("areashop.me")) return plugin.getLanguageManager().getLang("help-me");
 		return null;
 	}
 	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
-		if(!sender.hasPermission("areashop.me")) {
+		if (!sender.hasPermission("areashop.me")) {
 			plugin.message(sender, "me-noPermission");
 			return;
-		}		
-		if(!(sender instanceof Player)) {
+		}
+		if (!(sender instanceof Player)) {
 			plugin.message(sender, "me-notAPlayer");
 			return;
 		}
-		Player player = (Player)sender;
+		Player player = (Player) sender;
 		// Get the regions owned by the player
 		Set<RentRegion> rentRegions = new HashSet<RentRegion>();
-		for(RentRegion region : plugin.getFileManager().getRents()) {
-			if(region.isOwner(player)) {
+		for (RentRegion region : plugin.getFileManager().getRents()) {
+			if (region.isOwner(player)) {
 				rentRegions.add(region);
 			}
 		}
 		Set<BuyRegion> buyRegions = new HashSet<BuyRegion>();
-		for(BuyRegion region : plugin.getFileManager().getBuys()) {
-			if(region.isOwner(player)) {
+		for (BuyRegion region : plugin.getFileManager().getBuys()) {
+			if (region.isOwner(player)) {
 				buyRegions.add(region);
 			}
 		}
 		// Send messages
-		if(rentRegions.isEmpty()) {
+		if (rentRegions.isEmpty()) {
 			plugin.message(player, "me-noRentRegions");
-		} else {
+		}
+		else {
 			plugin.message(player, "me-rentRegions");
-			for(RentRegion region : rentRegions) {
+			for (RentRegion region : rentRegions) {
 				plugin.messageNoPrefix(player, "me-rentLine", region);
 			}
 		}
-		if(buyRegions.isEmpty()) {
+		if (buyRegions.isEmpty()) {
 			plugin.message(player, "me-noBuyRegions");
-		} else {
+		}
+		else {
 			plugin.message(player, "me-buyRegions");
-			for(BuyRegion region : buyRegions) {
+			for (BuyRegion region : buyRegions) {
 				plugin.messageNoPrefix(player, "me-buyLine", region);
 			}
 		}
 		Set<GeneralRegion> friendRegions = new HashSet<GeneralRegion>();
-		for(GeneralRegion region : plugin.getFileManager().getRegions()) {
-			if(region.getFriends() != null && region.getFriends().contains(player.getName())) {
+		for (GeneralRegion region : plugin.getFileManager().getRegions()) {
+			if (region.getFriends() != null && region.getFriends().contains(player.getName())) {
 				friendRegions.add(region);
 			}
 		}
-		if(friendRegions.isEmpty()) {
+		if (friendRegions.isEmpty()) {
 			plugin.message(player, "me-noFriendRegions");
-		} else {
+		}
+		else {
 			plugin.message(player, "me-friendRegions");
-			for(GeneralRegion region : friendRegions) {
+			for (GeneralRegion region : friendRegions) {
 				plugin.messageNoPrefix(player, "me-friendLine", region);
 			}
 		}
@@ -98,29 +100,3 @@ public class MeCommand extends CommandAreaShop {
 		return result;
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

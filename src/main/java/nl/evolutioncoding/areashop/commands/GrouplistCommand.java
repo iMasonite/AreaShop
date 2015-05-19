@@ -1,3 +1,4 @@
+
 package nl.evolutioncoding.areashop.commands;
 
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 public class GrouplistCommand extends CommandAreaShop {
-
+	
 	public GrouplistCommand(AreaShop plugin) {
 		super(plugin);
 	}
@@ -22,22 +23,21 @@ public class GrouplistCommand extends CommandAreaShop {
 	
 	@Override
 	public String getHelp(CommandSender target) {
-		if(target.hasPermission("areashop.grouplist")) {
-			return plugin.getLanguageManager().getLang("help-grouplist");
-		}
+		if (target.hasPermission("areashop.grouplist")) return plugin.getLanguageManager().getLang("help-grouplist");
 		return null;
 	}
-
+	
 	@Override
 	public void execute(CommandSender sender, Command command, String[] args) {
-		if(!sender.hasPermission("areashop.grouplist")) {
+		if (!sender.hasPermission("areashop.grouplist")) {
 			plugin.message(sender, "grouplist-noPermission");
 			return;
 		}
 		List<String> groups = plugin.getFileManager().getGroupNames();
-		if(groups.size() == 0) {
+		if (groups.size() == 0) {
 			plugin.message(sender, "grouplist-noGroups");
-		} else {
+		}
+		else {
 			plugin.message(sender, "grouplist-success", Utils.createCommaSeparatedList(groups));
 		}
 	}
@@ -46,15 +46,5 @@ public class GrouplistCommand extends CommandAreaShop {
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
 		return new ArrayList<String>();
 	}
-
+	
 }
-
-
-
-
-
-
-
-
-
-
