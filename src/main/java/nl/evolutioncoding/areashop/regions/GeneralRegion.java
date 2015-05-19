@@ -908,7 +908,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface {
 			String flagName = it.next();
 			String value = flags.getString(flagName);
 			value = applyAllReplacements(value);
-
+			
 			if (flagName.equalsIgnoreCase("members")) {
 				plugin.getWorldGuardHandler().setMembers(region, value);
 				// AreaShop.debug("  Flag " + flagName + " set: " + members.toUserFriendlyString());
@@ -1017,7 +1017,7 @@ public abstract class GeneralRegion implements GeneralRegionInterface {
 		plugin.getFileManager().saveIsRequiredForRegionWorld(getWorldName());
 		return result;
 	}
-		
+	
 	/** Indicate this region needs to be saved, saving will happen by a repeating task */
 	public void saveRequired() {
 		saveRequired = true;
