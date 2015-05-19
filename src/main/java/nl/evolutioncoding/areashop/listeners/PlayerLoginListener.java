@@ -99,8 +99,7 @@ public final class PlayerLoginListener implements Listener {
 					this.cancel();
 				}
 			}
-		}.runTaskTimer(plugin, 22, 1); // Wait a bit before starting to prevent a lot of stress on the
-																		// server when a player joins (a lot of plugins already do stuff
-																		// then)
+			// Wait a bit before starting to prevent a lot of stress on the server when a player joins (a lot of plugins already do stuff then)
+		}.runTaskTimer(plugin, 22, 1); 
 	}
 }

@@ -130,11 +130,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			try {
 				final Class<?> clazz = Class.forName("nl.evolutioncoding.areashop.handlers.WorldGuardHandler" + wgVersion);
 				// Check if we have a NMSHandler class at that location.
-				if (WorldGuardInterface.class.isAssignableFrom(clazz)) { // Make sure it actually implements
-																																	// WorldGuardInterface
-					this.worldGuardInterface = (WorldGuardInterface) clazz.getConstructor(AreaShopInterface.class).newInstance(this); // Set
-																																																														// our
-																																																														// handler
+				// Make sure it actually implements WorldGuardInterface
+				if (WorldGuardInterface.class.isAssignableFrom(clazz)) {
+					// Set our handler
+					this.worldGuardInterface = (WorldGuardInterface) clazz.getConstructor(AreaShopInterface.class).newInstance(this);
 				}
 			}
 			catch (final Exception e) {
@@ -163,12 +162,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			}
 			try {
 				final Class<?> clazz = Class.forName("nl.evolutioncoding.areashop.handlers.WorldEditHandler" + weVersion);
-				// Check if we have a NMSHandler class at that location.
-				if (WorldEditInterface.class.isAssignableFrom(clazz)) { // Make sure it actually implements
-																																// WorldEditInterface
-					this.worldEditInterface = (WorldEditInterface) clazz.getConstructor(AreaShopInterface.class).newInstance(this); // Set
-																																																													// our
-																																																													// handler
+				// Check if we have a NMSHandler class at that location. 
+				if (WorldEditInterface.class.isAssignableFrom(clazz)) {
+					// Set our handler
+					this.worldEditInterface = (WorldEditInterface) clazz.getConstructor(AreaShopInterface.class).newInstance(this);
 				}
 			}
 			catch (final Exception e) {

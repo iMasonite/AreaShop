@@ -43,10 +43,8 @@ public class SetlandlordCommand extends CommandAreaShop {
 		}
 		OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
 		if (player == null || player.getLastPlayed() == 0) {
-			plugin.message(sender, "setlandlord-didNotPlayBefore", args[1]); // Using args[1] instead of
-																																				// playername because that
-																																				// could return nothing if
-																																				// not played before
+			// Using args[1] instead of playername because that could return nothing if not played before
+			plugin.message(sender, "setlandlord-didNotPlayBefore", args[1]); 
 		}
 		GeneralRegion region = null;
 		if (args.length < 3) {
