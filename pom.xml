@@ -103,8 +103,8 @@
 				<artifactId>maven-antrun-plugin</artifactId>
 				<configuration>
 					<tasks>
-						<copy file="./target/${project.build.finalName}.jar" tofile="../../DEBUGSERVER/TekkitLite/plugins/${project.build.finalName}.jar" />
-						<copy file="./target/${project.build.finalName}.jar" tofile="../../DEBUGSERVER/Vanilla147/plugins/${project.build.finalName}.jar" />
+						<copy file="./target/${project.build.finalName}.jar" tofile="../DEBUGSERVER/TekkitLite/plugins/${project.build.finalName}.jar" />
+						<copy file="./target/${project.build.finalName}.jar" tofile="../DEBUGSERVER/Vanilla147/plugins/${project.build.finalName}.jar" />
 						<copy file="./target/${project.build.finalName}.jar" tofile="K:/GAME/SERVERS/Plugins-Master/${project.build.finalName}.jar" />
 					</tasks>
 				</configuration>

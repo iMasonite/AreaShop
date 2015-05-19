@@ -162,7 +162,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			}
 			try {
 				final Class<?> clazz = Class.forName("nl.evolutioncoding.areashop.handlers.WorldEditHandler" + weVersion);
-				// Check if we have a NMSHandler class at that location. 
+				// Check if we have a NMSHandler class at that location.
 				if (WorldEditInterface.class.isAssignableFrom(clazz)) {
 					// Set our handler
 					this.worldEditInterface = (WorldEditInterface) clazz.getConstructor(AreaShopInterface.class).newInstance(this);

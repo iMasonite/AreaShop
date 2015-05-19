@@ -5,10 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -776,35 +774,9 @@ public class FileManager {
 		// Load default settings
 		File defaultFile = new File(defaultPath);
 		if (!defaultFile.exists()) {
-			InputStream input = null;
-			OutputStream output = null;
-			try {
-				input = plugin.getResource(AreaShop.defaultFile);
-				output = new FileOutputStream(defaultFile);
-				
-				int read = 0;
-				byte[] bytes = new byte[1024];
-				while ((read = input.read(bytes)) != -1) {
-					output.write(bytes, 0, read);
-				}
-				input.close();
-				output.close();
-				plugin.getLogger().info("File with default region settings has been saved, should only happen the first time");
-			}
-			catch (IOException e) {
-				try {
-					input.close();
-					output.close();
-				}
-				catch (IOException e1) {
-				}
-				catch (NullPointerException e2) {
-				}
-				
-				plugin.getLogger().warning("Something went wrong saving the default region settings: " + defaultFile.getPath());
-			}
+			plugin.saveResource(AreaShop.defaultFile, false);
 		}
-		defaultConfig = YamlConfiguration.loadConfiguration(defaultFile);
+		defaultConfig = YamlConfiguration.loadConfiguration(new File(defaultPath));
 		return defaultConfig != null;
 	}
 	
@@ -816,39 +788,13 @@ public class FileManager {
 		File configFile = new File(configPath);
 		// Save the file from the jar to disk if it does not exist
 		if (!configFile.exists()) {
-			InputStream input = null;
-			OutputStream output = null;
-			try {
-				input = plugin.getResource(AreaShop.configFile);
-				output = new FileOutputStream(configFile);
-				
-				int read = 0;
-				byte[] bytes = new byte[1024];
-				while ((read = input.read(bytes)) != -1) {
-					output.write(bytes, 0, read);
-				}
-				input.close();
-				output.close();
-				plugin.getLogger().info("Default config file has been saved, should only happen on first startup");
-			}
-			catch (IOException e) {
-				try {
-					input.close();
-					output.close();
-				}
-				catch (IOException e1) {
-				}
-				catch (NullPointerException e2) {
-				}
-				
-				plugin.getLogger().warning("Something went wrong saving the config file: " + configFile.getPath());
-			}
+			plugin.saveResource(AreaShop.configFile, false);
 		}
-		defaultConfig = YamlConfiguration.loadConfiguration(configFile);
+		config = YamlConfiguration.loadConfiguration(new File(configPath));
 		
 		// Set the debug and chatprefix variables
-		plugin.setDebug(this.getConfig().getBoolean("debug"));
-		plugin.setChatprefix(this.getConfig().getString("chatPrefix"));
+		plugin.setDebug(config.getBoolean("debug"));
+		plugin.setChatprefix(config.getString("chatPrefix"));
 		
 		return config != null;
 	}

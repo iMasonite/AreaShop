@@ -2,10 +2,6 @@
 package nl.evolutioncoding.areashop.managers;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -49,36 +45,12 @@ public class LanguageManager {
 		/* file name as the default */
 		File langFile;
 		for (String language : languages) {
+			
 			langFile = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + File.separator + language + ".yml");
-			InputStream input = null;
-			OutputStream output = null;
-			try {
-				input = plugin.getResource(AreaShop.languageFolder + "/" + language + ".yml");
-				if (input == null) {
-					plugin.getLogger().warning("Could not save default language to the '" + AreaShop.languageFolder + "' folder: " + language + ".yml");
-					continue;
-				}
-				output = new FileOutputStream(langFile);
-				
-				int read = 0;
-				byte[] bytes = new byte[1024];
-				while ((read = input.read(bytes)) != -1) {
-					output.write(bytes, 0, read);
-				}
-				input.close();
-				output.close();
-			}
-			catch (IOException e) {
-				try {
-					input.close();
-					output.close();
-				}
-				catch (IOException e1) {
-				}
-				catch (NullPointerException e2) {
-				}
-				
-				plugin.getLogger().warning("Something went wrong saving a default language file: " + langFile.getPath());
+			
+			if (!langFile.exists()) {
+				plugin.saveResource(AreaShop.languageFolder + "/" + language + ".yml", false);
+				plugin.getLogger().info(AreaShop.languageFolder + "/" + language + ".yml Saved.");
 			}
 		}
 		
@@ -93,6 +65,7 @@ public class LanguageManager {
 		/* Save the current language file to the HashMap */
 		currentLanguage = new HashMap<String, String>();
 		File file = new File(plugin.getDataFolder() + File.separator + AreaShop.languageFolder + File.separator + plugin.getConfig().getString("language") + ".yml");
+		
 		ymlFile = YamlConfiguration.loadConfiguration(file);
 		map = ymlFile.getValues(true);
 		set = map.keySet();
