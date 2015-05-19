@@ -2,11 +2,9 @@ package nl.evolutioncoding.areashop.managers;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -39,7 +37,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -669,8 +666,6 @@ public class FileManager {
 					try {
 						if(plugin.getWorldGuard().getDescription().getVersion().startsWith("5.")) {
 							manager.save();
-						} else {							
-							manager.saveChanges();
 						}
 					} catch(Exception e) {
 						plugin.getLogger().warning("WorldGuard regions in world " + world + " could not be saved");
@@ -816,8 +811,8 @@ public class FileManager {
 	 * @return true if it has been loaded successfully, otherwise false
 	 */
 	public boolean loadDefaultFile() {
+		// Load default settings
 		File defaultFile = new File(defaultPath);
-		// Safe the file from the jar to disk if it does not exist
 		if(!defaultFile.exists()) {
 			InputStream input = null;
 			OutputStream output = null;
@@ -832,7 +827,7 @@ public class FileManager {
 				} 
 				input.close();
 				output.close();
-				plugin.getLogger().info("File with default region settings has been saved, should only happen on first startup");
+				plugin.getLogger().info("File with default region settings has been saved, should only happen the first time");
 			} catch(IOException e) {
 				try {
 					input.close();
@@ -841,33 +836,8 @@ public class FileManager {
 				
 				plugin.getLogger().warning("Something went wrong saving the default region settings: " + defaultFile.getPath());
 			}
-		}
-		// Load default.yml from the plugin folder
-		InputStreamReader reader = null;
-		try {
-			reader = new InputStreamReader(new FileInputStream(defaultFile), Charsets.UTF_8);
-		} catch (FileNotFoundException e) {}
-		if(reader != null) {
-			defaultConfig = YamlConfiguration.loadConfiguration(reader);
-		}
-		try {
-			reader.close();
-		} catch (IOException e) {}
-		if(defaultConfig == null) {
-			defaultConfig = new YamlConfiguration();
-		}
-		
-		// Addding the defaults from the normal file that is inside the jar is disabled, not nice when removing lines for things you don't want
-		InputStream inputStream = plugin.getResource(AreaShop.defaultFile);
-		if(inputStream != null) {
-			reader = new InputStreamReader(inputStream, Charsets.UTF_8);
-		}
-		if(reader != null) {
-			defaultConfig.addDefaults(YamlConfiguration.loadConfiguration(reader));
-		}
-		try {
-			reader.close();
-		} catch (IOException e) {}
+		}		
+		defaultConfig = YamlConfiguration.loadConfiguration(defaultFile);		
 		return defaultConfig != null;
 	}
 	
@@ -876,8 +846,9 @@ public class FileManager {
 	 * @return true if it has been loaded successfully, otherwise false
 	 */
 	public boolean loadConfigFile() {
+
 		File configFile = new File(configPath);
-		// Safe the file from the jar to disk if it does not exist
+		// Save the file from the jar to disk if it does not exist
 		if(!configFile.exists()) {
 			InputStream input = null;
 			OutputStream output = null;
@@ -902,35 +873,11 @@ public class FileManager {
 				plugin.getLogger().warning("Something went wrong saving the config file: " + configFile.getPath());
 			}
 		}
-		// Load config.yml from the plugin folder
-		InputStreamReader reader = null;
-		try {
-			reader = new InputStreamReader(new FileInputStream(configFile), Charsets.UTF_8);
-		} catch (FileNotFoundException e) {}
-		if(reader != null) {
-			config = YamlConfiguration.loadConfiguration(reader);
-		}
-		try {
-			reader.close();
-		} catch (IOException e) {}
-		if(config == null) {
-			config = new YamlConfiguration();
-		}
-		// Add the values from the config.yml file inside of the .jar as defaults
-		InputStream inputStream = plugin.getResource(AreaShop.configFile);
-		if(inputStream != null) {
-			reader = new InputStreamReader(inputStream, Charsets.UTF_8);
-		}
-		if(reader != null) {
-			config.addDefaults(YamlConfiguration.loadConfiguration(reader));
-		}
-		try {
-			reader.close();
-		} catch (IOException e) {}
-		
-	    // Set the debug and chatprefix variables
+		defaultConfig = YamlConfiguration.loadConfiguration(configFile);		
+
+	  // Set the debug and chatprefix variables
 		plugin.setDebug(this.getConfig().getBoolean("debug"));
-	    plugin.setChatprefix(this.getConfig().getString("chatPrefix"));
+	  plugin.setChatprefix(this.getConfig().getString("chatPrefix"));
 		
 		return config != null;
 	}
@@ -940,27 +887,22 @@ public class FileManager {
 	 * @return
 	 */
 	public boolean loadGroupsFile() {
-		File groupFile = new File(groupsPath);
-		InputStreamReader reader = null;
-		if(groupFile.exists() && groupFile.isFile()) {
-			try {
-				reader = new InputStreamReader(new FileInputStream(groupFile), Charsets.UTF_8);
-			} catch (FileNotFoundException e) {}
-			if(reader != null) {
-				groupsConfig = YamlConfiguration.loadConfiguration(reader);
-			}
-			try {
-				reader.close();
-			} catch (IOException e) {}
 
-		}
-		if(groupsConfig == null) {
+		// Load groups
+		File groupFile = new File(groupsPath);
+		if(groupFile.exists() && groupFile.isFile()) {
+			groupsConfig = YamlConfiguration.loadConfiguration(groupFile);
+		} else {
 			groupsConfig = new YamlConfiguration();
 		}
 		for(String groupName : groupsConfig.getKeys(false)) {
 			RegionGroup group = new RegionGroup(plugin, groupName);
+			for(String region : groupsConfig.getConfigurationSection(groupName).getStringList("regions")) {
+				group.addMember(regions.get(region.toLowerCase()));
+			}
 			groups.put(groupName, group);
 		}
+		
 		return true;
 	}
 	
@@ -971,78 +913,72 @@ public class FileManager {
 	public boolean loadRegionFiles() {
 		regions.clear();
 		File file = new File(regionsPath);
-		if(!file.exists()) {
+		if (!file.exists()) {
 			file.mkdirs();
-		} else if(file.isDirectory()) {
+		}
+		else if (file.isDirectory()) {
+			
 			File[] regionFiles = file.listFiles();
-			for(File regionFile : regionFiles) {
-				if(regionFile.exists() && regionFile.isFile()) {
+			for (File regionFile : regionFiles) {
+				if (regionFile.exists() && regionFile.isFile()) {
 					// Load the region file from disk in UTF8 mode
-					InputStreamReader reader = null;
-					YamlConfiguration config = null;
-					try {
-						reader = new InputStreamReader(new FileInputStream(regionFile), Charsets.UTF_8);
-					} catch (FileNotFoundException e) {}
-					if(reader != null) {
-						config = YamlConfiguration.loadConfiguration(reader);
-					}
-					try {
-						reader.close();
-					} catch (IOException e) {}
+					YamlConfiguration config = YamlConfiguration.loadConfiguration(regionFile);
+
 					// Construct the correct type of region
-					if(RegionType.RENT.getValue().equals(config.getString("general.type"))) {
+					if (RegionType.RENT.getValue().equals(config.getString("general.type"))) {
 						RentRegion rent = new RentRegion(plugin, config);
 						addRent(rent);
-					} else if(RegionType.BUY.getValue().equals(config.getString("general.type"))) {
+					}
+					else if (RegionType.BUY.getValue().equals(config.getString("general.type"))) {
 						BuyRegion buy = new BuyRegion(plugin, config);
 						addBuy(buy);
 					}
-				}						
+				}
 			}
-			plugin.setReady(true);			
-			new BukkitRunnable() {				
+			plugin.setReady(true);
+			new BukkitRunnable() {
 				@Override
 				public void run() {
 					List<GeneralRegion> noWorld = new ArrayList<GeneralRegion>();
 					List<GeneralRegion> noRegion = new ArrayList<GeneralRegion>();
-					for(GeneralRegion region : AreaShop.getInstance().getFileManager().getRegions()) {
+					for (GeneralRegion region : AreaShop.getInstance().getFileManager().getRegions()) {
 						// Add broken regions to a list
-						if(region != null) {
-							if(region.getWorld() == null) {
+						if (region != null) {
+							if (region.getWorld() == null) {
 								noWorld.add(region);
 							}
-							if(region.getRegion() == null) {
+							if (region.getRegion() == null) {
 								noRegion.add(region);
 							}
 						}
-					}					
+					}
 					// All files are loaded, print possible problems to the console
-					if(!noRegion.isEmpty()) {
+					if (!noRegion.isEmpty()) {
 						List<String> noRegionNames = new ArrayList<String>();
-						for(GeneralRegion region : noRegion) {
+						for (GeneralRegion region : noRegion) {
 							noRegionNames.add(region.getName());
 						}
 						plugin.getLogger().warning("AreaShop regions that are missing their WorldGuard region: " + Utils.createCommaSeparatedList(noRegionNames));
 						plugin.getLogger().warning("Remove these regions from AreaShop with '/as del' or recreate their regions in WorldGuard.");
 					}
 					boolean noWorldRegions = !noWorld.isEmpty();
-					while(!noWorld.isEmpty()) {
+					while (!noWorld.isEmpty()) {
 						List<GeneralRegion> toDisplay = new ArrayList<GeneralRegion>();
 						String missingWorld = noWorld.get(0).getWorldName();
 						toDisplay.add(noWorld.get(0));
-						for(int i=1; i<noWorld.size(); i++) {
-							if(noWorld.get(i).getWorldName().equalsIgnoreCase(missingWorld)) {
+						for (int i = 1; i < noWorld.size(); i++) {
+							if (noWorld.get(i).getWorldName().equalsIgnoreCase(missingWorld)) {
 								toDisplay.add(noWorld.get(i));
 							}
 						}
 						List<String> noWorldNames = new ArrayList<String>();
-						for(GeneralRegion region : noRegion) {
+						for (GeneralRegion region : noRegion) {
 							noWorldNames.add(region.getName());
 						}
 						plugin.getLogger().warning("World " + missingWorld + " is not loaded, the following AreaShop regions are not functional now: " + Utils.createCommaSeparatedList(noWorldNames));
 						noWorld.removeAll(toDisplay);
 					}
-					if(noWorldRegions) {
+					if (noWorldRegions) {
 						plugin.getLogger().warning("Remove these regions from AreaShop with '/as del' or load the world(s) on the server again.");
 					}
 				}
@@ -1134,7 +1070,6 @@ public class FileManager {
 						for(String rentName : rents.keySet()) {
 							HashMap<String,String> rent = rents.get(rentName);
 							if(rent.get("player") != null) {
-								@SuppressWarnings("deprecation")  // Fake deprecation by Bukkit to inform developers, method will stay
 								OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(rent.get("player"));
 								rent.put("playeruuid", offlinePlayer.getName());		
 								rent.remove("player");
@@ -1255,7 +1190,6 @@ public class FileManager {
 						for(String buyName : buys.keySet()) {
 							HashMap<String,String> buy = buys.get(buyName);
 							if(buy.get("player") != null) {
-								@SuppressWarnings("deprecation")  // Fake deprecation by Bukkit to inform developers, method will stay
 								OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(buy.get("player"));
 								buy.put("playeruuid", offlinePlayer.getName());		
 								buy.remove("player");
