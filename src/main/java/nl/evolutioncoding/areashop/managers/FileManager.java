@@ -794,6 +794,7 @@ public class FileManager {
 		
 		// Set the debug and chatprefix variables
 		plugin.setDebug(config.getBoolean("debug"));
+		plugin.setDebugTask(config.getBoolean("debug_task"));
 		plugin.setChatprefix(config.getString("chatPrefix"));
 		
 		return config != null;

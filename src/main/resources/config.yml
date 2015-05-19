@@ -34,6 +34,8 @@ postCommandErrors: true
 updateRegionsOnStartup: true
 ## Enables / disables debug messages in the console, could be useful to figure out where errors come from
 debug: false
+## Enables / disables debug messages in the console for timed tasks.
+debug_task: false
 ## Version of the config, do not change!
 version: ${project.version}
 

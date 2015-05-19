@@ -51,6 +51,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	private CommandManager commandManager = null;
 	private SignLinkerManager signLinkerManager = null;
 	private boolean debug = false;
+	private boolean debug_task = false;
 	private String chatprefix = null;
 	private boolean ready = false;
 	
@@ -259,6 +260,13 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 		this.debug = debug;
 	}
 	
+	/** Set if the plugin should output debug messages (loaded from config normally)
+	 * 
+	 * @param debug Indicates if the plugin should output debug messages or not */
+	public void setDebugTask(boolean debug_task) {
+		this.debug_task = debug_task;
+	}
+	
 	/** Set the chatprefix to use in the chat (loaded from config normally)
 	 * 
 	 * @param chatprefix The string to use in front of chat messages (supports formatting codes like
@@ -371,10 +379,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 				public void run() {
 					if (isReady()) {
 						finalPlugin.getFileManager().checkRents();
-						AreaShop.debug("Checking rent expirations...");
+						AreaShop.debug_task("Checking rent expirations...");
 					}
 					else {
-						AreaShop.debug("Skipped checking rent expirations, plugin not ready");
+						AreaShop.debug_task("Skipped checking rent expirations, plugin not ready");
 					}
 				}
 			}.runTaskTimer(this, 1, expirationCheck);
@@ -387,10 +395,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 				public void run() {
 					if (isReady()) {
 						finalPlugin.getFileManager().checkForInactiveRegions();
-						AreaShop.debug("Checking for regions with players that are inactive too long...");
+						AreaShop.debug_task("Checking for regions with players that are inactive too long...");
 					}
 					else {
-						AreaShop.debug("Skipped checking for regions of inactive players, plugin not ready");
+						AreaShop.debug_task("Skipped checking for regions of inactive players, plugin not ready");
 					}
 				}
 			}.runTaskTimer(this, inactiveCheck, inactiveCheck);
@@ -403,10 +411,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 				public void run() {
 					if (isReady()) {
 						finalPlugin.getFileManager().performPeriodicSignUpdate();
-						AreaShop.debug("Performing periodic sign update...");
+						AreaShop.debug_task("Performing periodic sign update...");
 					}
 					else {
-						AreaShop.debug("Skipped performing periodic sign update, plugin not ready");
+						AreaShop.debug_task("Skipped performing periodic sign update, plugin not ready");
 					}
 				}
 			}.runTaskTimer(this, periodicUpdate, periodicUpdate);
@@ -419,10 +427,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 				public void run() {
 					if (isReady()) {
 						finalPlugin.getFileManager().saveRequiredFiles();
-						AreaShop.debug("Saving required files...");
+						AreaShop.debug_task("Saving required files...");
 					}
 					else {
-						AreaShop.debug("Skipped saving required files, plugin not ready");
+						AreaShop.debug_task("Skipped saving required files, plugin not ready");
 					}
 				}
 			}.runTaskTimer(this, saveFiles, saveFiles);
@@ -435,10 +443,10 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 				public void run() {
 					if (isReady()) {
 						finalPlugin.getFileManager().sendRentExpireWarnings();
-						AreaShop.debug("Sending rent expire warnings...");
+						AreaShop.debug_task("Sending rent expire warnings...");
 					}
 					else {
-						AreaShop.debug("Skipped sending rent expire warnings, plugin not ready");
+						AreaShop.debug_task("Skipped sending rent expire warnings, plugin not ready");
 					}
 				}
 			}.runTaskTimer(this, expireWarning, expireWarning);
@@ -688,6 +696,15 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	public static void debug(String message) {
 		if (AreaShop.getInstance().debug) {
 			AreaShop.getInstance().getLogger().info("Debug: " + message);
+		}
+	}
+	
+	/** Sends an debug message to the console for repeating tasks
+	 * 
+	 * @param message The message that should be printed to the console */
+	public static void debug_task(String message) {
+		if (AreaShop.getInstance().debug_task) {
+			AreaShop.getInstance().getLogger().info("DebugTask: " + message);
 		}
 	}
 	
