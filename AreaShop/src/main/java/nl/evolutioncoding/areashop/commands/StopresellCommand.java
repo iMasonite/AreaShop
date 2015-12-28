@@ -1,15 +1,13 @@
 package nl.evolutioncoding.areashop.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.Utils;
 import nl.evolutioncoding.areashop.regions.BuyRegion;
-
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StopresellCommand extends CommandAreaShop {
 
@@ -33,13 +31,13 @@ public class StopresellCommand extends CommandAreaShop {
 	}
 	
 	@Override
-	public void execute(CommandSender sender, Command command, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if(!sender.hasPermission("areashop.stopresell") && !sender.hasPermission("areashop.stopresellall")) {
 			plugin.message(sender, "stopresell-noPermissionOther");
 			return;
 		}
-		
-		BuyRegion buy = null;
+
+		BuyRegion buy;
 		if(args.length <= 1) {
 			if (sender instanceof Player) {
 				// get the region by location
@@ -74,15 +72,13 @@ public class StopresellCommand extends CommandAreaShop {
 		}
 		if(sender.hasPermission("areashop.stopresellall")) {
 			buy.disableReselling();
+			buy.update();
 			plugin.message(sender, "stopresell-success", buy);
-			buy.updateSigns();
-			buy.updateRegionFlags();
 		} else if(sender.hasPermission("areashop.stopresell") && sender instanceof Player) {
 			if(buy.isOwner((Player)sender)) {
 				buy.disableReselling();
+				buy.update();
 				plugin.message(sender, "stopresell-success", buy);
-				buy.updateSigns();
-				buy.updateRegionFlags();
 			} else {
 				plugin.message(sender, "stopresell-noPermissionOther");
 			}
@@ -93,7 +89,7 @@ public class StopresellCommand extends CommandAreaShop {
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		if(toComplete == 2) {
 			for(BuyRegion region : plugin.getFileManager().getBuys()) {
 				if(region.isSold() && region.isInResellingMode()) {

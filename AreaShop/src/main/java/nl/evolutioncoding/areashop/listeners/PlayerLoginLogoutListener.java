@@ -1,32 +1,33 @@
 package nl.evolutioncoding.areashop.listeners;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.regions.GeneralRegion;
 import nl.evolutioncoding.areashop.regions.RentRegion;
-
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.event.player.PlayerLoginEvent.Result;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Checks for placement of signs for this plugin
  * @author NLThijs48
  */
-public final class PlayerLoginListener implements Listener {
-	AreaShop plugin;
+public final class PlayerLoginLogoutListener implements Listener {
+	private AreaShop plugin;
 	
 	/**
 	 * Constructor
 	 * @param plugin The AreaShop plugin
 	 */
-	public PlayerLoginListener(AreaShop plugin) {
+	public PlayerLoginLogoutListener(AreaShop plugin) {
 		this.plugin = plugin;
 	}
 	
@@ -74,7 +75,7 @@ public final class PlayerLoginListener implements Listener {
 			}
         }.runTaskTimer(plugin, 25, 25);	
 		// Check if the player has regions that use an old name of him and update them
-		final List<GeneralRegion> regions = new ArrayList<GeneralRegion>(plugin.getFileManager().getRegions());
+		final List<GeneralRegion> regions = new ArrayList<>(plugin.getFileManager().getRegions());
 		new BukkitRunnable() {
 			private int current = 0;
 			
@@ -92,14 +93,12 @@ public final class PlayerLoginListener implements Listener {
 							if(region.isBuyRegion()) {
 								if(!player.getName().equals(region.getStringSetting("buy.buyerName"))) {
 									region.setSetting("buy.buyerName", player.getName());
-									region.updateRegionFlags();
-									region.updateSigns();
+									region.update();
 								}
 							} else if(region.isRentRegion()) {
 								if(!player.getName().equals(region.getStringSetting("rent.renterName"))) {
 									region.setSetting("rent.renterName", player.getName());
-									region.updateRegionFlags();
-									region.updateSigns();
+									region.update();
 								}
 							}
 						}
@@ -111,6 +110,29 @@ public final class PlayerLoginListener implements Listener {
 				}
 			}
 		}.runTaskTimer(plugin, 22, 1); // Wait a bit before starting to prevent a lot of stress on the server when a player joins (a lot of plugins already do stuff then)
+	}
+	
+	// Active time updates
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerLogout(PlayerQuitEvent event) {
+		updateLastActive(event.getPlayer());
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPlayerKick(PlayerKickEvent event) {
+		updateLastActive(event.getPlayer());
+	}
+	
+	/**
+	 * Update the last active time for all regions the player is owner off
+	 * @param player The player to update the active times for
+	 */
+	private void updateLastActive(Player player) {
+		for(GeneralRegion region : plugin.getFileManager().getRegions()) {
+			if(region.isOwner(player)) {
+				region.updateLastActiveTime();
+			}
+		}
 	}
 }
 

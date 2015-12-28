@@ -1,11 +1,12 @@
 package nl.evolutioncoding.areashop.regions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.evolutioncoding.areashop.AreaShop;
-
 import org.bukkit.configuration.ConfigurationSection;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class RegionGroup {
 
@@ -24,7 +25,7 @@ public class RegionGroup {
 		// Delete duplicates
 		List<String> members = getMembers();
 		int previousCount = members.size();
-		List<String> newMembers = new ArrayList<String>();
+		List<String> newMembers = new ArrayList<>();
 		while(!members.isEmpty()) {
 			String member = members.remove(0);
 			// If the region has been deleted also clean it from the group
@@ -57,6 +58,7 @@ public class RegionGroup {
 		} else {
 			members.add(region.getName());
 			setSetting("regions", members);
+			this.saveRequired();
 			return true;
 		}
 	}
@@ -75,6 +77,9 @@ public class RegionGroup {
 		} else {
 			setSetting("regions", members);
 		}
+		if(result) {
+			this.saveRequired();
+		}
 		return result;
 	}
 	
@@ -84,9 +89,21 @@ public class RegionGroup {
 	 */
 	public List<String> getMembers() {
 		if(getSettings() == null || getSettings().getStringList("regions") == null) {
-			return new ArrayList<String>();
+			return new ArrayList<>();
 		}
 		return getSettings().getStringList("regions");
+	}
+	
+	/**
+	 * Get all members of the group as GeneralRegions
+	 * @return A Set with all group members
+	 */
+	public Set<GeneralRegion> getMemberRegions() {
+		Set<GeneralRegion> result = new HashSet<>();
+		for(String name : getMembers()) {
+			result.add(plugin.getFileManager().getRegion(name));
+		}
+		return result;
 	}
 	
 	/**

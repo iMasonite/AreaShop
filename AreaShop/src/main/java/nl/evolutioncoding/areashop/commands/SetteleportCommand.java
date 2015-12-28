@@ -1,19 +1,16 @@
 package nl.evolutioncoding.areashop.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.Utils;
 import nl.evolutioncoding.areashop.regions.BuyRegion;
 import nl.evolutioncoding.areashop.regions.GeneralRegion;
 import nl.evolutioncoding.areashop.regions.RentRegion;
-
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SetteleportCommand extends CommandAreaShop {
 
@@ -37,7 +34,7 @@ public class SetteleportCommand extends CommandAreaShop {
 	}
 
 	@Override
-	public void execute(CommandSender sender, Command command, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if(!sender.hasPermission("areashop.setteleport") && !sender.hasPermission("areashop.setteleportall")) {
 			plugin.message(sender, "setteleport-noPermission");
 			return;
@@ -47,29 +44,24 @@ public class SetteleportCommand extends CommandAreaShop {
 			return;
 		}
 		Player player = (Player)sender;
-		GeneralRegion region = null;
+		GeneralRegion region;
 		if(args.length < 2) {
-			if (sender instanceof Player) {
-				// get the region by location
-				List<GeneralRegion> regions = Utils.getAllApplicableRegions(((Player) sender).getLocation());
-				if (regions.isEmpty()) {
-					plugin.message(sender, "cmd-noRegionsAtLocation");
-					return;
-				} else if (regions.size() > 1) {
-					plugin.message(sender, "cmd-moreRegionsAtLocation");
-					return;
-				} else {
-					region = regions.get(0);
-				}
-			} else {
-				plugin.message(sender, "cmd-automaticRegionOnlyByPlayer");
+			// get the region by location
+			List<GeneralRegion> regions = Utils.getAllApplicableRegions(((Player)sender).getLocation());
+			if(regions.isEmpty()) {
+				plugin.message(sender, "cmd-noRegionsAtLocation");
 				return;
-			}		
+			} else if(regions.size() > 1) {
+				plugin.message(sender, "cmd-moreRegionsAtLocation");
+				return;
+			} else {
+				region = regions.get(0);
+			}
 		} else {
 			region = plugin.getFileManager().getRegion(args[1]);
-		}	
-		
-		boolean owner = false;
+		}
+
+		boolean owner;
 		
 		if(region == null) {
 			plugin.message(player, "setteleport-noRentOrBuy", args[1]);
@@ -91,6 +83,7 @@ public class SetteleportCommand extends CommandAreaShop {
 		ProtectedRegion wgRegion = region.getRegion();
 		if(args.length > 2 && args[2] != null && (args[2].equalsIgnoreCase("reset") || args[2].equalsIgnoreCase("yes") || args[2].equalsIgnoreCase("true"))) {
 			region.setTeleport(null);
+			region.update();
 			plugin.message(player, "setteleport-reset", region.getName());
 			return;
 		}
@@ -99,12 +92,13 @@ public class SetteleportCommand extends CommandAreaShop {
 			return;
 		}
 		region.setTeleport(player.getLocation());
+		region.update();
 		plugin.message(player, "setteleport-success", region.getName());
 	}
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		if(toComplete == 2) {
 			result.addAll(plugin.getFileManager().getRegionNames());
 		} else if(toComplete == 3) {

@@ -1,19 +1,17 @@
 package nl.evolutioncoding.areashop.handlers;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
-
+import com.sk89q.worldguard.domains.DefaultDomain;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import nl.evolutioncoding.areashop.interfaces.AreaShopInterface;
 import nl.evolutioncoding.areashop.interfaces.WorldGuardInterface;
-
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 
-import com.sk89q.worldguard.domains.DefaultDomain;
-import com.sk89q.worldguard.protection.ApplicableRegionSet;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class WorldGuardHandler5 extends WorldGuardInterface {
 
@@ -35,7 +33,7 @@ public class WorldGuardHandler5 extends WorldGuardInterface {
 					}
 				} else if(owner.startsWith("n:")) {
 					if(owner.length() > 2) {
-						owners.addPlayer(owner);
+						owners.addPlayer(owner.substring(2));
 					}							
 				} else {
 					UUID uuid;						
@@ -72,7 +70,7 @@ public class WorldGuardHandler5 extends WorldGuardInterface {
 					}
 				} else if(member.startsWith("n:")) {
 					if(member.length() > 2) {
-						members.addPlayer(member);
+						members.addPlayer(member.substring(2));
 					}							
 				} else {
 					UUID uuid;						
@@ -103,6 +101,26 @@ public class WorldGuardHandler5 extends WorldGuardInterface {
 			result.add(region);
 		}
 		return result;
+	}
+
+	@Override
+	public boolean containsMember(ProtectedRegion region, UUID player) {
+		if(player == null) {
+			return false;
+		} else {
+			String name = Bukkit.getOfflinePlayer(player).getName();
+			return name != null && region.getMembers().contains(name);
+		}
+	}
+
+	@Override
+	public boolean containsOwner(ProtectedRegion region, UUID player) {
+		if(player == null) {
+			return false;
+		} else {
+			String name = Bukkit.getOfflinePlayer(player).getName();
+			return name != null && region.getOwners().contains(name);
+		}
 	}
 	
 }

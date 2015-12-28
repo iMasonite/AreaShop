@@ -1,14 +1,15 @@
-name: AreaShop 
+name: AreaShop
 main: nl.evolutioncoding.areashop.AreaShop
 version: ${project.version}
+description: "Selling and renting WorldGuard regions to your players, highly configurable."
 depend: [Vault, WorldGuard, WorldEdit]
 softdepend: [Multiverse-Core]
 author: NLThijs48
-website: http://dev.bukkit.org/bukkit-plugins/regionbuyandrent/
+website: https://github.com/NLthijs48/AreaShop
 commands:
   AreaShop:
-    description: For all commands use /as help 
-    usage: AreaShop has not started correctly, check the console and correct any errors
+    description: 'For all commands use /as help.'
+    usage: 'AreaShop has not started correctly, check the log file (or console) and correct any errors.'
     aliases: [as]
 permissions:
   areashop.*:
@@ -21,6 +22,8 @@ permissions:
       areashop.destroybuy: true
       areashop.rent: true
       areashop.buy: true
+      areashop.buyresell: true
+      areashop.buynormal: true
       areashop.unrent: true
       areashop.info: true
       areashop.reload: true
@@ -52,6 +55,7 @@ permissions:
       areashop.notifyupdate: true
       areashop.stack: true
       areashop.setlandlord: true
+      areashop.linksigns: true
   areashop.landlord.*:
     description: Give access to all landlord features
     children:
@@ -59,6 +63,8 @@ permissions:
       areashop.createbuy.owner: true
       areashop.setprice.landlord: true
       areashop.setduration.landlord: true
+      areashop.destroyrent.landlord: true
+      areashop.destroybuy.landlord: true
   areashop.help:
     description: Allows you to see the help pages
     default: true
@@ -67,6 +73,12 @@ permissions:
     default: true
   areashop.buy:
     description: Allows you to buy a region
+    default: true
+  areashop.buyresell:
+    description: Allows you to buy a region that is in resell mode
+    default: true
+  areashop.buynormal:
+    description: Allows you to buy a region that is not in resell mode
     default: true
   areashop.unrent:
     description: Allows you to unrent a specific region
@@ -99,11 +111,17 @@ permissions:
     description: Allows you to add buy regions to AreaShop for which you are registered as owner
     default: false
   areashop.destroyrent:
-    description: Allows you to break signs used for renting regions
+    description: Allows you remove rental regions from AreaShop
     default: op
+  areashop.destroyrent.landlord:
+    description: Allows you to remove rental regions from AreaShop when you are the landlord
+    default: false
   areashop.destroybuy:
-    description: Allows you to break signs used for renting regions
+    description: Allows you to remove buy regions from AreaShop
     default: op
+  areashop.destroybuy.landlord:
+    description: Allows you to remove buy regions from AreaShop when you are the landlord
+    default: false
   areashop.info:
     description: Allows you check the status of regions and players
     default: true
@@ -218,10 +236,10 @@ permissions:
   areashop.addfriendall:
     description: Allows you to add friends to all regions
     default: op
-  areashop.delfriend: 
+  areashop.delfriend:
     description: Allows you to delete friends from your regions
     default: true
-  areashop.delfriendall: 
+  areashop.delfriendall:
     description: Allows you to delete friends from all regions
     default: op
   areashop.notifyupdate:

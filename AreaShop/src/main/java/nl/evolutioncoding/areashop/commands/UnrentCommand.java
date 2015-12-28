@@ -1,15 +1,13 @@
 package nl.evolutioncoding.areashop.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.Utils;
 import nl.evolutioncoding.areashop.regions.RentRegion;
-
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class UnrentCommand extends CommandAreaShop {
 
@@ -33,12 +31,12 @@ public class UnrentCommand extends CommandAreaShop {
 	}
 	
 	@Override
-	public void execute(CommandSender sender, Command command, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if(!sender.hasPermission("areashop.unrent") && !sender.hasPermission("areashop.unrentown")) {
 			plugin.message(sender, "unrent-noPermission");
 			return;
 		}
-		RentRegion rent = null;
+		RentRegion rent;
 		if(args.length <= 1) {
 			if (sender instanceof Player) {
 				// get the region by location
@@ -66,27 +64,13 @@ public class UnrentCommand extends CommandAreaShop {
 		if(!rent.isRented()) {
 			plugin.message(sender, "unrent-notRented");
 			return;
-		}		
-		if(sender.hasPermission("areashop.unrent")) {
-			plugin.message(sender, "unrent-other", rent.getPlayerName());
-			rent.unRent(true);
-		} else {
-			if(sender.hasPermission("areashop.unrentown") && sender instanceof Player) {
-				if(rent.getRenter().equals(((Player)sender).getUniqueId())) {
-					plugin.message(sender, "unrent-unrented");
-					rent.unRent(true);
-				} else {
-					plugin.message(sender, "unrent-noPermissionOther");
-				}
-			} else {
-				plugin.message(sender, "unrent-noPermission");
-			}
-		}			
+		}
+		rent.unRent(true, sender);
 	}
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		if(toComplete == 2) {
 			for(RentRegion region : plugin.getFileManager().getRents()) {
 				if(region.isRented()) {

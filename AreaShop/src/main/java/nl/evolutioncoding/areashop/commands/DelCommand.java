@@ -1,19 +1,18 @@
 package nl.evolutioncoding.areashop.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.sk89q.worldedit.bukkit.selections.Selection;
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.Utils;
+import nl.evolutioncoding.areashop.events.notify.RemovedRegionEvent;
 import nl.evolutioncoding.areashop.regions.BuyRegion;
 import nl.evolutioncoding.areashop.regions.GeneralRegion;
 import nl.evolutioncoding.areashop.regions.RentRegion;
-
-import org.bukkit.command.Command;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import com.sk89q.worldedit.bukkit.selections.Selection;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DelCommand extends CommandAreaShop {
 
@@ -35,8 +34,12 @@ public class DelCommand extends CommandAreaShop {
 	}
 
 	@Override
-	public void execute(CommandSender sender, Command command, String[] args) {
-		if(!sender.hasPermission("areashop.destroybuy") && !sender.hasPermission("areashop.destroyrent")) {
+	public void execute(CommandSender sender, String[] args) {
+		if(		   !sender.hasPermission("areashop.destroybuy")
+				&& !sender.hasPermission("areashop.destroybuy.landlord")
+			
+				&& !sender.hasPermission("areashop.destroyrent")
+				&& !sender.hasPermission("areashop.destroyrent.landlord")) {
 			plugin.message(sender, "del-noPermission");
 			return;
 		}
@@ -58,24 +61,26 @@ public class DelCommand extends CommandAreaShop {
 				return;
 			}
 			// Start removing the region that he has permission for
-			ArrayList<String> namesSuccess = new ArrayList<String>();
-			ArrayList<String> namesFailed = new ArrayList<String>();
+			ArrayList<String> namesSuccess = new ArrayList<>();
+			ArrayList<String> namesFailed = new ArrayList<>();
 			for(GeneralRegion region : regions) {
+				boolean isLandlord = region.isLandlord(((Player)sender).getUniqueId());
 				if(region.isRentRegion()) {
-					if(!sender.hasPermission("areashop.destroyrent")) {
+					if(!sender.hasPermission("areashop.destroyrent") && !(isLandlord && sender.hasPermission("areashop.destroyrent.landlord"))) {
 						namesFailed.add(region.getName());
 					} else {
 						plugin.getFileManager().removeRent((RentRegion)region, true);
 						namesSuccess.add(region.getName());
 					}					
 				} else if(region.isBuyRegion()) {
-					if(!sender.hasPermission("areashop.destroybuy")) {
+					if(!sender.hasPermission("areashop.destroybuy") && !(isLandlord && sender.hasPermission("areashop.destroybuy.landlord"))) {
 						namesFailed.add(region.getName());
 					} else {
 						plugin.getFileManager().removeBuy((BuyRegion)region, true);
 						namesSuccess.add(region.getName());
 					}
-				}				
+				}
+				Bukkit.getPluginManager().callEvent(new RemovedRegionEvent(region));
 			}
 			// send messages
 			if(namesSuccess.size() != 0) {
@@ -90,9 +95,10 @@ public class DelCommand extends CommandAreaShop {
 				plugin.message(sender, "del-noRegion", args[1]);
 				return;
 			}
+			boolean isLandlord = sender instanceof Player && region.isLandlord(((Player)sender).getUniqueId());
 			if(region.isRentRegion()) {
 				/* Remove the rent if the player has permission */
-				if(sender.hasPermission("areashop.destroyrent")) {
+				if(sender.hasPermission("areashop.destroyrent") || (isLandlord && sender.hasPermission("areashop.destroyrent.landlord"))) {
 					plugin.getFileManager().removeRent((RentRegion)region, true);
 					plugin.message(sender, "destroy-successRent", region.getName());
 				} else {
@@ -100,20 +106,20 @@ public class DelCommand extends CommandAreaShop {
 				}
 			} else if(region.isBuyRegion()) {
 				/* Remove the buy if the player has permission */
-				if(sender.hasPermission("areashop.destroybuy")) {
+				if(sender.hasPermission("areashop.destroybuy") || (isLandlord && sender.hasPermission("areashop.destroybuy.landlord"))) {
 					plugin.getFileManager().removeBuy((BuyRegion)region, true);
 					plugin.message(sender, "destroy-successBuy", region.getName());
 				} else {
 					plugin.message(sender, "destroy-noPermissionBuy");
 				}
 			}
-			
+			Bukkit.getPluginManager().callEvent(new RemovedRegionEvent(region));
 		}
 	}
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 		if(toComplete == 2) {
 			result = plugin.getFileManager().getRegionNames();
 		}

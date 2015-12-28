@@ -1,15 +1,13 @@
 package nl.evolutioncoding.areashop.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.Utils;
 import nl.evolutioncoding.areashop.regions.BuyRegion;
-
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SellCommand extends CommandAreaShop {
 
@@ -33,12 +31,12 @@ public class SellCommand extends CommandAreaShop {
 	}
 	
 	@Override
-	public void execute(CommandSender sender, Command command, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if(!sender.hasPermission("areashop.sell") && !sender.hasPermission("areashop.sellown")) {
 			plugin.message(sender, "sell-noPermission");
 			return;
 		}
-		BuyRegion buy = null;
+		BuyRegion buy;
 		if(args.length <= 1) {
 			if (sender instanceof Player) {
 				// get the region by location
@@ -67,26 +65,12 @@ public class SellCommand extends CommandAreaShop {
 			plugin.message(sender, "sell-notBought");
 			return;
 		}
-		if(sender.hasPermission("areashop.sell")) {
-			plugin.message(sender, "sell-sold", buy.getPlayerName());
-			buy.sell(true);
-		} else {
-			if(sender.hasPermission("areashop.sellown") && sender instanceof Player) {
-				if(buy.getBuyer().equals(((Player)sender).getUniqueId())) {
-					plugin.message(sender, "sell-soldYours");
-					buy.sell(true);
-				} else {
-					plugin.message(sender, "sell-noPermissionOther");
-				}
-			} else {
-				plugin.message(sender, "sell-noPermission");
-			}									
-		}		
+		buy.sell(true, sender);
 	}
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		if(toComplete == 2) {
 			for(BuyRegion region : plugin.getFileManager().getBuys()) {
 				if(region.isSold()) {

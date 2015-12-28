@@ -1,17 +1,15 @@
 package nl.evolutioncoding.areashop.commands;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import nl.evolutioncoding.areashop.AreaShop;
 import nl.evolutioncoding.areashop.Utils;
 import nl.evolutioncoding.areashop.regions.GeneralRegion;
-
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class SetlandlordCommand extends CommandAreaShop {
 
@@ -33,7 +31,7 @@ public class SetlandlordCommand extends CommandAreaShop {
 	}
 
 	@Override
-	public void execute(CommandSender sender, Command command, String[] args) {
+	public void execute(CommandSender sender, String[] args) {
 		if(!sender.hasPermission("areashop.setlandlord")) {
 			plugin.message(sender, "setlandlord-noPermission");
 			return;
@@ -44,10 +42,7 @@ public class SetlandlordCommand extends CommandAreaShop {
 		}
 		@SuppressWarnings("deprecation")
 		OfflinePlayer player = Bukkit.getOfflinePlayer(args[1]);
-		if(player == null || player.getLastPlayed() == 0) {
-			plugin.message(sender, "setlandlord-didNotPlayBefore", args[1]); // Using args[1] instead of playername because that could return nothing if not played before
-		}		
-		GeneralRegion region = null;
+		GeneralRegion region;
 		if(args.length < 3) {
 			if (sender instanceof Player) {
 				// get the region by location
@@ -69,20 +64,21 @@ public class SetlandlordCommand extends CommandAreaShop {
 			region = plugin.getFileManager().getRegion(args[2]);
 		}	
 		if(region == null) {
-			plugin.message(player, "setlandlord-noRegion", args[2]);
+			plugin.message(sender, "setlandlord-noRegion", args[2]);
 			return;
 		}		
-		region.setLandlord(player.getUniqueId());
 		String playerName = player.getName();
-		if(playerName.isEmpty()) {
+		if(playerName == null || playerName.isEmpty()) {
 			playerName = args[1];
 		}
+		region.setLandlord(player.getUniqueId(), playerName);
+		region.update();
 		plugin.message(sender, "setlandlord-success", playerName, region.getName());
 	}
 	
 	@Override
 	public List<String> getTabCompleteList(int toComplete, String[] start, CommandSender sender) {
-		ArrayList<String> result = new ArrayList<String>();
+		ArrayList<String> result = new ArrayList<>();
 		if(toComplete == 2) {
 			for(Player player : Bukkit.getOnlinePlayers()) {
 				result.add(player.getName());

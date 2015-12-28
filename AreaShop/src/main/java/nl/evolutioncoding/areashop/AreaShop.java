@@ -1,19 +1,18 @@
 package nl.evolutioncoding.areashop;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.UUID;
-import java.util.logging.Logger;
-
+import com.sk89q.worldedit.bukkit.WorldEditPlugin;
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import net.milkbowl.vault.economy.Economy;
 import nl.evolutioncoding.areashop.Updater.UpdateResult;
 import nl.evolutioncoding.areashop.Updater.UpdateType;
+import nl.evolutioncoding.areashop.features.DebugFeature;
+import nl.evolutioncoding.areashop.features.Feature;
+import nl.evolutioncoding.areashop.features.SignDisplayFeature;
+import nl.evolutioncoding.areashop.features.WorldGuardRegionFlagsFeature;
 import nl.evolutioncoding.areashop.interfaces.AreaShopInterface;
 import nl.evolutioncoding.areashop.interfaces.WorldEditInterface;
 import nl.evolutioncoding.areashop.interfaces.WorldGuardInterface;
-import nl.evolutioncoding.areashop.listeners.PlayerLoginListener;
+import nl.evolutioncoding.areashop.listeners.PlayerLoginLogoutListener;
 import nl.evolutioncoding.areashop.listeners.SignBreakListener;
 import nl.evolutioncoding.areashop.listeners.SignChangeListener;
 import nl.evolutioncoding.areashop.listeners.SignClickListener;
@@ -21,28 +20,31 @@ import nl.evolutioncoding.areashop.managers.CommandManager;
 import nl.evolutioncoding.areashop.managers.FileManager;
 import nl.evolutioncoding.areashop.managers.LanguageManager;
 import nl.evolutioncoding.areashop.managers.SignLinkerManager;
-
+import nl.evolutioncoding.areashop.regions.GeneralRegion;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import com.sk89q.worldedit.bukkit.WorldEditPlugin;
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+import java.util.logging.Logger;
 
 /**
  * Main class for the AreaShop plugin
  * @author NLThijs48
  */
 public final class AreaShop extends JavaPlugin implements AreaShopInterface {
-	/* General variables */
+	// General variables
 	private static AreaShop instance = null;
 	
 	private WorldGuardPlugin worldGuard = null;
@@ -59,7 +61,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	private boolean updateAvailable = false;
 	private boolean ready = false;
 	
-	/* Folders and file names */
+	// Folders and file names
 	public static final String languageFolder = "lang";
 	public static final String schematicFolder = "schem";
 	public static final String schematicExtension = ".schematic";	
@@ -69,14 +71,14 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	public static final String configFile = "config.yml";	
 	public static final String versionFile = "versions";
 	
-	/* Euro tag for in the config */
+	// Euro tag for in the config
 	public static final String currencyEuro = "%euro%";
 	
-	/* Constants for handling file versions */
+	// Constants for handling file versions
 	public static final String versionFiles = "files";
-	public static final int versionFilesCurrent = 2;
+	public static final int versionFilesCurrent = 3;
 	
-	/* Keys for replacing parts of flags, commands, strings */
+	// Keys for replacing parts of flags, commands, strings
 	public static final String tagPlayerName = "%player%";
 	public static final String tagPlayerUUID = "%uuid%";
 	public static final String tagWorldName = "%world%";
@@ -105,6 +107,16 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	public static final String tagMaxInactiveTime = "%inactivetime%";
 	public static final String tagLandlord = "%landlord%";
 	public static final String tagLandlordUUID = "%landlorduuid%";
+	public static final String tagDateTime = "%datetime%";
+	public static final String tagDateTimeShort = "%datetimeshort%";
+	public static final String tagYear = "%year%";
+	public static final String tagMonth = "%month%";
+	public static final String tagDay = "%day%";
+	public static final String tagHour = "%hour%";
+	public static final String tagMinute = "%minute%";
+	public static final String tagSecond = "%second%";
+	public static final String tagMillisecond = "%millisecond%";
+	public static final String tagEpoch = "%epoch%";
 	
 	public static AreaShop getInstance() {
 		return AreaShop.instance;
@@ -181,7 +193,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
         
 		// Load all data from files and check versions
 	    fileManager = new FileManager(this);
-	    error = error & !fileManager.loadFiles();
+	    error = error | !fileManager.loadFiles();
 	    
 	    // Print loaded version of WG and WE in debug
 	    if(wgVersion != null) {
@@ -201,8 +213,9 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			this.getServer().getPluginManager().registerEvents(new SignChangeListener(this), this);
 			this.getServer().getPluginManager().registerEvents(new SignBreakListener(this), this);
 			this.getServer().getPluginManager().registerEvents(new SignClickListener(this), this);			
-			this.getServer().getPluginManager().registerEvents(new PlayerLoginListener(this), this);
-			
+			this.getServer().getPluginManager().registerEvents(new PlayerLoginLogoutListener(this), this);
+
+			setupFeatures();
 			setupTasks();
 	        
 		    // Startup the CommandManager (registers itself for the command)
@@ -256,10 +269,16 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	 *  Called on shutdown or reload of the server 
 	 */
 	public void onDisable() {
+		// Update lastactive time for players that are online now
+		for(GeneralRegion region : fileManager.getRegions()) {
+			Player player = Bukkit.getPlayer(region.getOwner());
+			if(player != null) {
+				region.updateLastActiveTime();
+			}
+		}
 		fileManager.saveRequiredFilesAtOnce();		
 		Bukkit.getServer().getScheduler().cancelTasks(this);
 		
-		/* set variables to null to prevent memory leaks */
 		worldGuard = null;
 		worldEdit = null;
 		fileManager = null;
@@ -269,7 +288,25 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 		debug = false;
 		ready = false;
 		updater = null;
-	}	
+	}
+
+	/**
+	 * Instanciate and register all Feature classes
+	 */
+	public void setupFeatures() {
+		Set<Feature> features = new HashSet<>();
+
+		features.add(new DebugFeature(this));
+		features.add(new SignDisplayFeature(this));
+		features.add(new WorldGuardRegionFlagsFeature(this));
+
+		// Register as listener when necessary
+		for(Feature feature : features) {
+			if(feature instanceof Listener) {
+				this.getServer().getPluginManager().registerEvents((Listener)feature, this);
+			}
+		}
+	}
 	
 	/**
 	 * Indicates if the plugin is ready to be used
@@ -370,7 +407,7 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	
 	/**
 	 * Get the current chatPrefix
-	 * @return
+	 * @return The current chatPrefix
 	 */
 	public String getChatPrefix() {
 		return chatprefix;
@@ -522,6 +559,9 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	 * @param params The parameters to inject into the message string
 	 */
 	public void configurableMessage(Object target, String key, boolean prefix, Object... params) {
+		if(target == null) {
+			return;
+		}
 		String langString = this.fixColors(languageManager.getLang(key, params));
 		if(langString == null || langString.equals("")) {
 			// Do nothing, message is not available or disabled
@@ -581,47 +621,54 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 		String after = this.getConfig().getString("moneyCharacterAfter");
 		after = after.replace(currencyEuro, "\u20ac");
 	    String result;
-		// Add metric 
-		double metricAbove = getConfig().getDouble("metricSuffixesAbove");
-		if(metricAbove != -1 && amount >= metricAbove) {
-			if(amount >= 1000000000000000000000000.0) {
-				amount = amount/1000000000000000000000000.0;
-				after = "Y" + after;
-			} else if(amount >= 1000000000000000000000.0) {
-				amount = amount/1000000000000000000000.0;
-				after = "Z" + after;
-			} else if(amount >= 1000000000000000000.0) {
-				amount = amount/1000000000000000000.0;
-				after = "E" + after;
-			} else if(amount >= 1000000000000000.0) {
-				amount = amount/1000000000000000.0;
-				after = "P" + after;
-			} else if(amount >= 1000000000000.0) {
-				amount = amount/1000000000000.0;
-				after = "T" + after;
-			} else if(amount >= 1000000000.0) {
-				amount = amount/1000000000.0;
-				after = "G" + after;
-			} else if(amount >= 1000000.0) {
-				amount = amount/1000000.0;
-				after = "M" + after;
-			} else if(amount >= 1000.0) {
-				amount = amount/1000.0;
-				after = "k" + after;
-			}
-			BigDecimal bigDecimal = new BigDecimal(amount);
-			if(bigDecimal.toString().contains(".")) {
-				int frontLength = bigDecimal.toString().substring(0, bigDecimal.toString().indexOf('.')).length();
-			    bigDecimal = bigDecimal.setScale(getConfig().getInt("fractionalNumbers") + (3-frontLength), RoundingMode.HALF_UP);
-			}
-		    result = bigDecimal.toString();
-		} else {
-			BigDecimal bigDecimal = new BigDecimal(amount);
-			bigDecimal = bigDecimal.setScale(getConfig().getInt("fractionalNumbers"), RoundingMode.HALF_UP);
-			amount = bigDecimal.doubleValue();
-		    result = bigDecimal.toString();
-			if(getConfig().getBoolean("hideEmptyFractionalPart") && (amount%1.0) == 0.0 && result.contains(".")) {
-				result = result.substring(0, result.indexOf('.'));
+	    // Check for infinite and NaN
+	    if(Double.isInfinite(amount)) {
+			result = "\u221E"; // Infinite symbol
+		} else if(Double.isNaN(amount)) {
+			result = "NaN";
+		} else {	    
+			// Add metric 
+			double metricAbove = getConfig().getDouble("metricSuffixesAbove");
+			if(metricAbove != -1 && amount >= metricAbove) {
+				if(amount >= 1000000000000000000000000.0) {
+					amount = amount/1000000000000000000000000.0;
+					after = "Y" + after;
+				} else if(amount >= 1000000000000000000000.0) {
+					amount = amount/1000000000000000000000.0;
+					after = "Z" + after;
+				} else if(amount >= 1000000000000000000.0) {
+					amount = amount/1000000000000000000.0;
+					after = "E" + after;
+				} else if(amount >= 1000000000000000.0) {
+					amount = amount/1000000000000000.0;
+					after = "P" + after;
+				} else if(amount >= 1000000000000.0) {
+					amount = amount/1000000000000.0;
+					after = "T" + after;
+				} else if(amount >= 1000000000.0) {
+					amount = amount/1000000000.0;
+					after = "G" + after;
+				} else if(amount >= 1000000.0) {
+					amount = amount/1000000.0;
+					after = "M" + after;
+				} else if(amount >= 1000.0) {
+					amount = amount/1000.0;
+					after = "k" + after;
+				}
+				BigDecimal bigDecimal = new BigDecimal(amount);
+				if(bigDecimal.toString().contains(".")) {
+					int frontLength = bigDecimal.toString().substring(0, bigDecimal.toString().indexOf('.')).length();
+				    bigDecimal = bigDecimal.setScale(getConfig().getInt("fractionalNumbers") + (3-frontLength), RoundingMode.HALF_UP);
+				}
+			    result = bigDecimal.toString();
+			} else {
+				BigDecimal bigDecimal = new BigDecimal(amount);
+				bigDecimal = bigDecimal.setScale(getConfig().getInt("fractionalNumbers"), RoundingMode.HALF_UP);
+				amount = bigDecimal.doubleValue();
+			    result = bigDecimal.toString();
+				if(getConfig().getBoolean("hideEmptyFractionalPart") && (amount%1.0) == 0.0 && result.contains(".")) {
+					result = result.substring(0, result.indexOf('.'));
+				}
 			}
 		}
 		result = result.replace(".", getConfig().getString("decimalMark"));
@@ -670,10 +717,12 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 		
 		/* Check if the suffix is one of these values */
 		String suffix = time.substring(time.indexOf(' ')+1, time.length());
-		ArrayList<String> identifiers = new ArrayList<String>();
+		ArrayList<String> identifiers = new ArrayList<>();
+		identifiers.addAll(this.getConfig().getStringList("seconds"));
 		identifiers.addAll(this.getConfig().getStringList("minutes"));
 		identifiers.addAll(this.getConfig().getStringList("hours"));
 		identifiers.addAll(this.getConfig().getStringList("days"));
+		identifiers.addAll(this.getConfig().getStringList("weeks"));
 		identifiers.addAll(this.getConfig().getStringList("months"));
 		identifiers.addAll(this.getConfig().getStringList("years"));
 		if(!identifiers.contains(suffix)) {
@@ -695,22 +744,27 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			return 0;
 		} else if(duration.equalsIgnoreCase("disabled") || duration.equalsIgnoreCase("unlimited")) {
 			return -1;
+		} else if(duration.indexOf(' ') == -1) {
+			return 0;
 		}
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTimeInMillis(0);
 
-		ArrayList<String> seconds = new ArrayList<String>(this.getConfig().getStringList("seconds"));
-		ArrayList<String> minutes = new ArrayList<String>(this.getConfig().getStringList("minutes"));
-		ArrayList<String> hours = new ArrayList<String>(this.getConfig().getStringList("hours"));
-		ArrayList<String> days = new ArrayList<String>(this.getConfig().getStringList("days"));
-		ArrayList<String> months = new ArrayList<String>(this.getConfig().getStringList("months"));
-		ArrayList<String> years = new ArrayList<String>(this.getConfig().getStringList("years"));
+		ArrayList<String> seconds = new ArrayList<>(this.getConfig().getStringList("seconds"));
+		ArrayList<String> minutes = new ArrayList<>(this.getConfig().getStringList("minutes"));
+		ArrayList<String> hours = new ArrayList<>(this.getConfig().getStringList("hours"));
+		ArrayList<String> days = new ArrayList<>(this.getConfig().getStringList("days"));
+		ArrayList<String> weeks = new ArrayList<>(this.getConfig().getStringList("weeks"));
+		ArrayList<String> months = new ArrayList<>(this.getConfig().getStringList("months"));
+		ArrayList<String> years = new ArrayList<>(this.getConfig().getStringList("years"));
 		
 		String durationString = duration.substring(duration.indexOf(' ')+1, duration.length());
 		int durationInt = 0;
 		try {
 			durationInt = Integer.parseInt(duration.substring(0, duration.indexOf(' ')));
-		} catch(NumberFormatException exception) {}
+		} catch(NumberFormatException exception) {
+			// No Number found, add zero
+		}
 		
 		if(seconds.contains(durationString)) {
 			calendar.add(Calendar.SECOND, durationInt);
@@ -720,6 +774,8 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			calendar.add(Calendar.HOUR, durationInt);
 		} else if(days.contains(durationString)) {
 			calendar.add(Calendar.DAY_OF_MONTH, durationInt);
+		} else if(weeks.contains(durationString)) {
+			calendar.add(Calendar.DAY_OF_MONTH, durationInt*7);
 		} else if(months.contains(durationString)) {
 			calendar.add(Calendar.MONTH, durationInt);
 		} else if(years.contains(durationString)) {
@@ -735,8 +791,12 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	 * @return milliseconds that the setting indicates
 	 */
 	public long getDurationFromSecondsOrString(String path) {
-		if(getConfig().isLong(path)) {
-			return getConfig().getLong(path)*1000;
+		if(getConfig().isLong(path) || getConfig().isInt(path)) {
+			long setting = getConfig().getLong(path);
+			if(setting != -1) {
+				setting = setting*1000;
+			}
+			return setting;
 		} else {
 			return durationStringToLong(getConfig().getString(path));
 		}
@@ -748,10 +808,50 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	 * @return milliseconds that the setting indicates
 	 */
 	public long getDurationFromMinutesOrString(String path) {
-		if(getConfig().isLong(path)) {
-			return getConfig().getLong(path)*60*1000;
+		if(getConfig().isLong(path) || getConfig().isInt(path)) {
+			long setting = getConfig().getLong(path);
+			if(setting != -1) {
+				setting = setting*60*1000;
+			}
+			return setting;
 		} else {
 			return durationStringToLong(getConfig().getString(path));
+		}
+	}
+	
+	/**
+	 * Parse a time setting that could be minutes or a duration string
+	 * @param input The string to parse
+	 * @return milliseconds that the string indicates
+	 */
+	public long getDurationFromMinutesOrStringInput(String input) {
+		long number;
+		try {
+			number = Long.parseLong(input);
+			if(number != -1) {
+				number = number*60*1000;
+			}
+			return number;
+		} catch(NumberFormatException e) {
+			return durationStringToLong(input);			
+		}
+	}
+	
+	/**
+	 * Parse a time setting that could be seconds or a duration string
+	 * @param input The string to parse
+	 * @return seconds that the string indicates
+	 */
+	public long getDurationFromSecondsOrStringInput(String input) {
+		long number;
+		try {
+			number = Long.parseLong(input);
+			if(number != -1) {
+				number = number*1000;
+			}
+			return number;
+		} catch(NumberFormatException e) {
+			return durationStringToLong(input);			
 		}
 	}
 	
@@ -799,11 +899,16 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 	 * @return the name of the player
 	 */
 	public String toName(String uuid) {
-		if(uuid == null) {
-			return "";
-		} else {
-			return this.toName(UUID.fromString(uuid));			
+		String result = "";
+		if(uuid != null) {
+			try {
+				UUID parsed = UUID.fromString(uuid);
+				result = this.toName(parsed);
+			} catch(IllegalArgumentException e) {
+				// Incorrect UUID
+			}
 		}
+		return result;
 	}
 	/**
 	 * Conversion to name by uuid object
@@ -817,9 +922,8 @@ public final class AreaShop extends JavaPlugin implements AreaShopInterface {
 			String name = Bukkit.getOfflinePlayer(uuid).getName();
 			if(name != null) {
 				return name;
-			} else {
-				return uuid.toString();
 			}
+			return "";
 		}
 	}
 	
